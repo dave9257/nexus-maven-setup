@@ -17,7 +17,7 @@
 - Tạo thư mục `nexus-data` và thêm quyền write cho thư mục này:
   ```bash
   mkdir nexus-data
-  chmod o+x nexus-data
+  chmod o+w nexus-data
   ```
   Bước này là cần thiết do người dùng trong container sẽ không có quyền root.
 - Tạo file docker-compose.yaml hoặc compose.yaml với nội dung:
