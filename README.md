@@ -14,6 +14,9 @@
   - [Upload package lên nexus](#upload-package-lên-nexus)
     - [Cách 1: Upload thủ công](#cách-1-upload-thủ-công)
     - [Cách 2: Deploy bằng maven](#cách-2-deploy-bằng-maven)
+  - [Backup nexus repository](#backup-nexus-repository)
+    - [Dùng rsync](#dùng-rsync)
+    - [Dùng tar archive](#dùng-tar-archive)
 
 ## Triển khai Nexus Repository trên Docker
 
@@ -25,17 +28,23 @@
 ### Các bước thực hiện
 
 - Tạo thư mục mới với tên bất kỳ, ví dụ:
+
   ```bash
   mkdir nexus-repo
   cd nexus-repo
   ```
+
 - Tạo thư mục `nexus-data` và thêm quyền write cho thư mục này:
+
   ```bash
   mkdir nexus-data
   chmod o+w nexus-data
   ```
+
   Bước này là cần thiết do người dùng trong container sẽ không có quyền root.
+
 - Tạo file docker-compose.yaml hoặc compose.yaml với nội dung:
+
   ```yaml
   services:
     nexus:
@@ -45,14 +54,21 @@
       volumes:
         - ./nexus-data:/nexus-data
   ```
+
 - Chạy docker compose:
+
   ```bash
   docker compose up -d
   ```
+
   Có thể mất một vài phút trước khi server online. Sử dụng `docker logs -f nexus-repo-nexus-1` hoặc xóa bỏ `-d` để theo dõi logs.
+
 - Truy cập giao diện web tại `http://localhost:8081`:
+
   ![alt text](images/nexus-welcome.png)
+
 - Đăng nhập tài khoản admin:
+
   Chọn Sign in và đăng nhập với tài khoản `admin` và mật khẩu nằm trong file `./nexus-data/admin.password`. Sau khi đăng nhập, đặt mật khẩu admin mới và chọn `Enable anonymous access`.
 
 Truy cập vào mục Browse để xem dach sách các repository mặc định. Nexus 3 đã tạo sắn 4 repo maven và 3 repo nuGet.
@@ -97,23 +113,13 @@ Tạo file `~/.m2/settings.xml` nếu chưa có sẵn:
 <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
-  <mirrors>
-    <mirror>
-      <!--This sends everything else to /public -->
-      <id>nexus</id>
-      <mirrorOf>*</mirrorOf>
-      <url>http://localhost:8081/repository/maven-public/</url>
-    </mirror>
-  </mirrors>
   <profiles>
     <profile>
       <id>nexus</id>
-      <!--Enable snapshots for the built in central repo to direct
-        all requests to nexus via the mirror -->
       <repositories>
         <repository>
-          <id>central</id>
-          <url>http://central</url>
+          <id>nexus</id>
+          <url>http://localhost:8081/repository/maven-public/</url>
           <releases>
             <enabled>true</enabled>
           </releases>
@@ -124,8 +130,8 @@ Tạo file `~/.m2/settings.xml` nếu chưa có sẵn:
       </repositories>
       <pluginRepositories>
         <pluginRepository>
-          <id>central</id>
-          <url>http://central</url>
+          <id>nexus</id>
+          <url>http://localhost:8081/repository/maven-public/</url>
           <releases>
             <enabled>true</enabled>
           </releases>
@@ -137,7 +143,6 @@ Tạo file `~/.m2/settings.xml` nếu chưa có sẵn:
     </profile>
   </profiles>
   <activeProfiles>
-    <!--make the profile active all the time -->
     <activeProfile>nexus</activeProfile>
   </activeProfiles>
 </settings>
@@ -168,23 +173,25 @@ Các package có thể được download từ giao diện web hoặc được kh
 Tài khoản admin có đầy đủ quyền để upload lên nexus. Tuy nhiên, để tăng bảo mật chúng ta nên tạo một người dùng chỉ có đủ quyền để deploy lên các repo cho phép.
 
 - Truy cập vào trang Admin (hình bánh răng), trong mục _Security_, chọn _Roles_ -> _Create Role_ và điền các thông tin như bên dưới. Sau đó chọn Save.
-  | Field | Value |
-  |---|---|
-  | Type | Nexus role |
-  | Role ID | nx-deployment |
-  | Role Name | nx-deployment |
+
+  | Field              | Value                                                                                     |
+  | ------------------ | ----------------------------------------------------------------------------------------- |
+  | Type               | Nexus role                                                                                |
+  | Role ID            | nx-deployment                                                                             |
+  | Role Name          | nx-deployment                                                                             |
   | Applied Privileges | nx-repository-view-maven2-maven-releases-\*, nx-repository-view-maven2-maven-snapshots-\* |
 
 - Truy cập vào _Users_, chọn _Create local user_ và điền thông tin như sau, tất nhiên nên thay đổi mật khẩu và các thông tin khác nếu cần thiết.
-  | Field | Value |
-  |---|---|
-  | ID | deployment |
-  | First name | Deployment |
-  | Last name | User |
-  | Email | deployment@example.com |
-  | Password | deployment123 |
-  | Status | Active |
-  | Roles | nx-deployment |
+
+  | Field      | Value                  |
+  | ---------- | ---------------------- |
+  | ID         | deployment             |
+  | First name | Deployment             |
+  | Last name  | User                   |
+  | Email      | deployment@example.com |
+  | Password   | deployment123          |
+  | Status     | Active                 |
+  | Roles      | nx-deployment          |
 
 Thêm plugin `nexus-staging-maven-plugin` vào `pom.xml`:
 
@@ -272,3 +279,25 @@ mvn clean deploy
 **Lưu ý:** Sử dụng `clean` để tránh upload những artifact được build bởi các phiên bản khác của project.
 
 maven sẽ tự động lựa chọn releases hoặc snapshots dựa vào đuôi `-SNAPSHOT` trong `<version></version>`.
+
+## Backup nexus repository
+
+### Dùng rsync
+
+```bash
+sudo rsync -a nexus-data /path/to/new/location/
+```
+
+### Dùng tar archive
+
+Tạo file tar.gz:
+
+```bash
+sudo tar czvf nexus-data.tar.gz nexus-data
+```
+
+Giải nén file:
+
+```bash
+sudo tar xzvf nexus-data.tar.gz
+```
