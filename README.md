@@ -17,6 +17,7 @@
   - [Backup nexus repository](#backup-nexus-repository)
     - [Dùng rsync](#dùng-rsync)
     - [Dùng tar archive](#dùng-tar-archive)
+  - [Không cho phép truy cập ẩn danh](#không-cho-phép-truy-cập-ẩn-danh)
 
 ## Triển khai Nexus Repository trên Docker
 
@@ -91,8 +92,8 @@ Thêm vào `pom.xml`:
   <repositories>
     <repository>
       <id>nexus</id>
-  	  <name>maven-public</name>
-  	  <url>http://localhost:8081/repository/maven-public/</url>
+      <name>maven-public</name>
+      <url>http://localhost:8081/repository/maven-public/</url>
     </repository>
   </repositories>
   ...
@@ -301,3 +302,26 @@ Giải nén file:
 ```bash
 sudo tar xzvf nexus-data.tar.gz
 ```
+
+## Không cho phép truy cập ẩn danh
+
+Bên cạnh tài khoản admin, nexus cũng tạo một tài khoản mặc định khác là _anonymous_. Tài khoản này được assign tự động cho người dùng truy cập mà không có credientials. Tài khoản này có quyền tìm kiếm, đọc và tải package từ mọi repo.
+
+Để hủy kích hoạt người dùng này, chọn _Disable anonymous access_ khi setup lần đầu hoặc truy cập _Security_ -> _Anonymous Access_, bỏ chọn _Allow anonymous users to access the server_.
+
+Để tạo người dùng mới với quyền tương tự _anonymous_, tạo người dùng mới bất kỳ với role là _nx-anonymous_.
+
+Người dùng sẽ cần config tài khoản và mật khẩu để donwload package từ nexus:
+
+```xml
+<!-- ~/.m2/settings.xml -->
+<servers>
+  <server>
+    <id>nexus</id>
+    <username>username</username>
+    <password>password</password>
+  </server>
+<servers>
+```
+
+`<id>` cần khớp với `<id>` trong `<repository>`.
