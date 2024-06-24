@@ -7,7 +7,7 @@
   - [Triển khai Nexus Repository trên Docker](#triển-khai-nexus-repository-trên-docker)
     - [Yều cầu](#yều-cầu)
     - [Các bước thực hiện](#các-bước-thực-hiện)
-  - [Cài đặt maven để sử dụng Nexus](#cài-đặt-maven-để-sử-dụng-nexus)
+  - [Config maven để sử dụng Nexus](#config-maven-để-sử-dụng-nexus)
     - [Cách 1: Sử dụng pom.xml](#cách-1-sử-dụng-pomxml)
     - [Cách 2: Sử dụng settings.xml:](#cách-2-sử-dụng-settingsxml)
     - [Download package từ nexus](#download-package-từ-nexus)
@@ -80,7 +80,7 @@ Truy cập vào mục Browse để xem dach sách các repository mặc định.
 
 `maven-central` là một proxy đến [Maven Central Repository](https://mvnrepository.com/repos/central) sử dụng mặc định bởi maven. `maven-releases` chứa các package do người dùng tải lên và `maven-snapshots` chứa các package `-SNAPSHOT`. `maven-public` là tổng hợp cả 3 repo phía trên.
 
-## Cài đặt maven để sử dụng Nexus
+## Config maven để sử dụng Nexus
 
 ### Cách 1: Sử dụng pom.xml
 
