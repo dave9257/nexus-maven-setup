@@ -180,7 +180,7 @@ Tài khoản admin có đầy đủ quyền để upload lên nexus. Tuy nhiên,
   | Type               | Nexus role                                                                                |
   | Role ID            | nx-deployment                                                                             |
   | Role Name          | nx-deployment                                                                             |
-  | Applied Privileges | nx-repository-view-maven2-maven-releases-\*, nx-repository-view-maven2-maven-snapshots-\* |
+  | Applied Privileges | nx-repository-view-\*-\*-add, nx-repository-view-\*-\*-edit, nx-repository-view-\*-\*-read |
 
 - Truy cập vào _Users_, chọn _Create local user_ và điền thông tin như sau, tất nhiên nên thay đổi mật khẩu và các thông tin khác nếu cần thiết.
 
