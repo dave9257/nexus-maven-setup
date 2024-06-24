@@ -18,6 +18,8 @@
     - [Dùng rsync](#dùng-rsync)
     - [Dùng tar archive](#dùng-tar-archive)
   - [Không cho phép truy cập ẩn danh](#không-cho-phép-truy-cập-ẩn-danh)
+  - [Troubleshooting](#troubleshooting)
+    - [Maven chặn kết nối HTTP](#maven-chặn-kết-nối-http)
 
 ## Triển khai Nexus Repository trên Docker
 
@@ -325,3 +327,20 @@ Người dùng sẽ cần config tài khoản và mật khẩu để donwload pa
 ```
 
 `<id>` cần khớp với `<id>` trong `<repository>`.
+
+## Troubleshooting
+
+### Maven chặn kết nối HTTP
+
+Từ phiên bản [3.8.1](https://maven.apache.org/docs/3.8.1/release-notes.html), maven chặn tất cả kết nối http ra bên ngoài. Để cho phép kết nối HTTP, override blocker mặc định trong `~/.m2/settings.xml`:
+
+```xml
+<mirrors>
+  <mirror>
+    <id>maven-default-http-blocker</id>
+    <mirrorOf>dummy</mirrorOf> <!-- Default was external:http:* -->
+    <name>Pseudo repository to mirror external repositories initially using HTTP.</name>
+    <url>http://0.0.0.0/</url>
+  </mirror>
+</mirrors>
+```
